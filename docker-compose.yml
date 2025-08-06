@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: hospital_system_development
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    command: bundle exec rails server -b 0.0.0.0 -p 7001
+    volumes:
+      - ./backend:/app
+    ports:
+      - "7001:7001"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/hospital_system_development
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development
+
+  frontend:
+    build: ./frontend
+    command: bundle exec rails server -b 0.0.0.0 -p 7002
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "7002:7002"
+    depends_on:
+      - backend
+    environment:
+      BACKEND_API_URL: http://backend:7001
+      RAILS_ENV: development
+
+volumes:
+  postgres_data:
