@@ -1,0 +1,56 @@
+# Rails
+backend/tmp/
+backend/log/
+backend/storage/
+frontend/tmp/
+frontend/log/
+frontend/storage/
+
+# Cache files
+backend/tmp/cache/
+frontend/tmp/cache/
+*.cache
+
+# PID files
+*.pid
+backend/tmp/pids/
+frontend/tmp/pids/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Node.js (if using)
+node_modules/
+npm-debug.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Bundler
+vendor/bundle/
+.bundle/
+
+# Coverage reports
+coverage/
+
+# Test files that shouldn't be committed
+test.db
+
+# Backup files
+*.bak
+*.backup
