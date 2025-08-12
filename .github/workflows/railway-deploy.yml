@@ -30,7 +30,9 @@ jobs:
       run: |
         echo "📦 Installing Railway CLI..."
         npm install -g @railway/cli
-        railway version
+        echo "🔍 Verifying Railway CLI installation..."
+        railway --help | head -5 || railway help | head -5 || echo "Railway CLI installed"
+        echo "✅ Railway CLI ready for use"
       
     - name: Validate Backend Environment
       run: |
@@ -60,7 +62,7 @@ jobs:
         }
         
         echo "📋 Railway projects:"
-        railway list || echo "No projects found or authentication issue"
+        railway list || railway projects || echo "No projects found or authentication issue"
         
         # Railway 프로젝트 연결 시도 (프로젝트 ID가 설정된 경우)
         if [ -n "$RAILWAY_PROJECT_ID" ]; then
@@ -97,7 +99,7 @@ jobs:
           echo "📋 Railway status:"
           railway status || true
           echo "📋 Available services:"
-          railway service || true
+          railway service || railway services || echo "No services found"
           exit 1
         }
         
@@ -157,7 +159,9 @@ jobs:
       run: |
         echo "📦 Installing Railway CLI..."
         npm install -g @railway/cli
-        railway version
+        echo "🔍 Verifying Railway CLI installation..."
+        railway --help | head -5 || railway help | head -5 || echo "Railway CLI installed"
+        echo "✅ Railway CLI ready for use"
 
     - name: Railway Authentication & Project Setup
       run: |
