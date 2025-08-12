@@ -91,16 +91,19 @@ jobs:
           exit 1
         fi
         
-        # 서비스 배포 시도
+        # 서비스 배포 시도 (backend 디렉토리에서 실행)
         echo "📤 Deploying backend service..."
-        railway up --detach || {
+        cd backend
+        railway up --service backend --detach || railway up --detach || {
           echo "❌ Backend deployment failed"
           echo "📋 Railway status:"
           railway status || true
           echo "📋 Available services:"
-          railway service || railway services || echo "No services found"
+          railway service list || railway service || echo "No services found"
+          cd ..
           exit 1
         }
+        cd ..
         
         echo "✅ Backend deployment initiated successfully"
       env:
@@ -194,14 +197,17 @@ jobs:
           exit 1
         fi
         
-        # 프론트엔드 서비스 배포
+        # 프론트엔드 서비스 배포 (frontend 디렉토리에서 실행)
         echo "📤 Deploying frontend service..."
-        railway up --detach || {
+        cd frontend
+        railway up --service frontend --detach || railway up --detach || {
           echo "❌ Frontend deployment failed"
           echo "📋 Railway status:"
           railway status || true
+          cd ..
           exit 1
         }
+        cd ..
         
         echo "✅ Frontend deployment initiated successfully"
       env:
