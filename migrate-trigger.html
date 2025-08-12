@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Migration Trigger</title>
+</head>
+<body>
+    <h1>Database Migration</h1>
+    <button onclick="runMigration()">Run Migration</button>
+    <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+    
+    <script>
+        async function runMigration() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Running migration...';
+            
+            try {
+                const response = await fetch('https://hsc1-production.up.railway.app/health/migrate', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                resultDiv.innerHTML = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
