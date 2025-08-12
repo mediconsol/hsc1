@@ -54,3 +54,6 @@ test.db
 # Backup files
 *.bak
 *.backup
+
+# Claude Code configuration (local only)
+.claude/
