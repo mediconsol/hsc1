@@ -22,7 +22,10 @@ jobs:
         working-directory: ./backend
         
     - name: Install Railway CLI
-      run: npm install -g @railway/cli
+      run: |
+        echo "📦 Installing Railway CLI..."
+        npm install -g @railway/cli
+        railway version
       
     - name: Validate Backend Environment
       run: |
@@ -32,13 +35,68 @@ jobs:
           exit 1
         fi
         echo "✅ Backend validation passed"
+        echo "📋 Backend files:"
+        ls -la config/ | head -10
       working-directory: ./backend
+
+    - name: Railway Authentication & Project Setup
+      run: |
+        echo "🔐 Authenticating with Railway..."
+        if [ -z "$RAILWAY_TOKEN" ]; then
+          echo "❌ RAILWAY_TOKEN not found in secrets"
+          echo "Please set RAILWAY_TOKEN in GitHub repository secrets"
+          exit 1
+        fi
+        
+        echo "🔍 Checking Railway authentication..."
+        railway login --token $RAILWAY_TOKEN || {
+          echo "❌ Railway authentication failed"
+          exit 1
+        }
+        
+        echo "📋 Railway projects:"
+        railway list || echo "No projects found or authentication issue"
+        
+        # Railway 프로젝트 연결 시도 (프로젝트 ID가 설정된 경우)
+        if [ -n "$RAILWAY_PROJECT_ID" ]; then
+          echo "🔗 Linking to Railway project: $RAILWAY_PROJECT_ID"
+          railway link $RAILWAY_PROJECT_ID || {
+            echo "⚠️ Failed to link to project, continuing anyway..."
+          }
+        else
+          echo "ℹ️ RAILWAY_PROJECT_ID not set, manual project linking required"
+        fi
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
     - name: Deploy Backend to Railway
       run: |
-        echo "🚀 Deploying Backend Service..."
-        railway up --service backend --detach
-        echo "✅ Backend deployment initiated"
+        echo "🚀 Attempting Backend Service deployment..."
+        
+        # 프로젝트 연결 상태 확인
+        if railway status; then
+          echo "✅ Railway project connected"
+        else
+          echo "❌ No Railway project connected"
+          echo "Please create a Railway project and set up the connection"
+          echo "Visit: https://railway.app to create a project"
+          echo "Then set RAILWAY_PROJECT_ID in GitHub secrets"
+          exit 1
+        fi
+        
+        # 서비스 배포 시도
+        echo "📤 Deploying backend service..."
+        railway up --detach || {
+          echo "❌ Backend deployment failed"
+          echo "📋 Railway status:"
+          railway status || true
+          echo "📋 Available services:"
+          railway service || true
+          exit 1
+        }
+        
+        echo "✅ Backend deployment initiated successfully"
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       working-directory: ./backend
@@ -91,13 +149,54 @@ jobs:
       working-directory: ./frontend
       
     - name: Install Railway CLI
-      run: npm install -g @railway/cli
+      run: |
+        echo "📦 Installing Railway CLI..."
+        npm install -g @railway/cli
+        railway version
+
+    - name: Railway Authentication & Project Setup
+      run: |
+        echo "🔐 Authenticating with Railway..."
+        railway login --token $RAILWAY_TOKEN || {
+          echo "❌ Railway authentication failed"
+          exit 1
+        }
+        
+        # Railway 프로젝트 연결 (백엔드에서 이미 설정된 프로젝트 사용)
+        if [ -n "$RAILWAY_PROJECT_ID" ]; then
+          echo "🔗 Linking to Railway project: $RAILWAY_PROJECT_ID"
+          railway link $RAILWAY_PROJECT_ID || {
+            echo "❌ Failed to link to project"
+            exit 1
+          }
+        else
+          echo "❌ RAILWAY_PROJECT_ID not set"
+          exit 1
+        fi
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
       
     - name: Deploy Frontend to Railway
       run: |
-        echo "🚀 Deploying Frontend Service..."
-        railway up --service frontend --detach
-        echo "✅ Frontend deployment initiated"
+        echo "🚀 Attempting Frontend Service deployment..."
+        
+        # 프로젝트 연결 상태 재확인
+        if ! railway status; then
+          echo "❌ Railway project not connected"
+          exit 1
+        fi
+        
+        # 프론트엔드 서비스 배포
+        echo "📤 Deploying frontend service..."
+        railway up --detach || {
+          echo "❌ Frontend deployment failed"
+          echo "📋 Railway status:"
+          railway status || true
+          exit 1
+        }
+        
+        echo "✅ Frontend deployment initiated successfully"
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       working-directory: ./frontend
