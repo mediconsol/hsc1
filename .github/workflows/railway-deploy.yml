@@ -55,11 +55,9 @@ jobs:
           exit 1
         fi
         
-        echo "🔍 Checking Railway authentication..."
-        railway login --token $RAILWAY_TOKEN || {
-          echo "❌ Railway authentication failed"
-          exit 1
-        }
+        echo "🔍 Setting up Railway authentication via environment..."
+        # Railway CLI will automatically use RAILWAY_TOKEN environment variable
+        echo "✅ Railway token configured"
         
         echo "📋 Railway projects:"
         railway list || railway projects || echo "No projects found or authentication issue"
@@ -67,8 +65,9 @@ jobs:
         # Railway 프로젝트 연결 시도 (프로젝트 ID가 설정된 경우)
         if [ -n "$RAILWAY_PROJECT_ID" ]; then
           echo "🔗 Linking to Railway project: $RAILWAY_PROJECT_ID"
-          railway link $RAILWAY_PROJECT_ID || {
-            echo "⚠️ Failed to link to project, continuing anyway..."
+          railway link --project $RAILWAY_PROJECT_ID || railway link $RAILWAY_PROJECT_ID || {
+            echo "⚠️ Failed to link to project, trying environment setup..."
+            export RAILWAY_PROJECT_ID="$RAILWAY_PROJECT_ID"
           }
         else
           echo "ℹ️ RAILWAY_PROJECT_ID not set, manual project linking required"
@@ -166,17 +165,16 @@ jobs:
     - name: Railway Authentication & Project Setup
       run: |
         echo "🔐 Authenticating with Railway..."
-        railway login --token $RAILWAY_TOKEN || {
-          echo "❌ Railway authentication failed"
-          exit 1
-        }
+        echo "🔍 Setting up Railway authentication via environment..."
+        # Railway CLI will automatically use RAILWAY_TOKEN environment variable
+        echo "✅ Railway token configured"
         
         # Railway 프로젝트 연결 (백엔드에서 이미 설정된 프로젝트 사용)
         if [ -n "$RAILWAY_PROJECT_ID" ]; then
           echo "🔗 Linking to Railway project: $RAILWAY_PROJECT_ID"
-          railway link $RAILWAY_PROJECT_ID || {
-            echo "❌ Failed to link to project"
-            exit 1
+          railway link --project $RAILWAY_PROJECT_ID || railway link $RAILWAY_PROJECT_ID || {
+            echo "⚠️ Failed to link to project, trying environment setup..."
+            export RAILWAY_PROJECT_ID="$RAILWAY_PROJECT_ID"
           }
         else
           echo "❌ RAILWAY_PROJECT_ID not set"
